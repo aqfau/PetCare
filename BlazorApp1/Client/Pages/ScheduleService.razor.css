@@ -1,0 +1,32 @@
+﻿.app-group {
+    border: solid thin black;
+    padding: 1em;
+}
+
+.app-form-group {
+    border-bottom: solid thin black;
+}
+
+.ml-1 {
+    margin-left: 1em;
+}
+
+.block {
+    display: block;
+}
+
+.number-of-animal-group {
+    display: inline-block;
+}
+
+.number-of-animal-group select {
+    width: 3em;
+}
+
+select {
+    min-width: 140px;
+}
+
+
+
+

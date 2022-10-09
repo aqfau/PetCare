@@ -1,0 +1,89 @@
+﻿@page "/services/schedule"
+@using BlazorApp1.Shared.Models
+@inject HttpClient Http
+<h3>Schedule Services</h3>
+<form class="app-group">
+    <div class="app-form-group">
+        <h5>Add Pets</h5>
+        <label for="preexistingSelector">Choose your Critter</label>
+        <select id="preexistingSelector"></select>
+        <div class="app-add-new-pet">
+            @switch (addingPetStatus)
+            {
+                case AddPetStatus.None:
+                    <div><b>OR</b></div>
+                    <button type="button" @onclick="OnClickAddPet">Add New Pet</button>
+                    break;
+                case AddPetStatus.PetName:
+                    <label for="petName">What's your pet's name?: </label>
+                    <input type="text" id="petName" @ref="PetNameInputReference">
+                    <button type="button">Cancel</button>
+                    <button type="button">Next</button>
+                    break;
+                case AddPetStatus.PetDetails:
+                    <label for="petName">Pet Name: </label>
+                    <input type="text" id="petName">
+                    break;
+            }
+        </div>
+    </div>
+    <h5>Select a Service:</h5>
+    <div id="services" class="app-form-group">
+        @if (activities != null)
+        {
+            @foreach (Activity activity in activities)
+            {
+                <div class="block">
+                    <input type="radio" name="services" /><label class="ml-1">@activity.Name ($0)</label>
+                </div>
+            }
+        }
+        else
+        {
+            <div>Unable to load options from server</div>
+        }
+    </div>
+
+    <h5 for="additionalServices">Additional Services</h5>
+    <div id="additionalServices">
+        <div class="block">
+            <input type="checkbox" value="nails" id="nails" /><label class="ml-1" for="nails"> Nail Trim</label>
+        </div>
+        <div class="block">
+            <input type="checkbox" value="bath" id="bath" /><label class="ml-1" for="bath"> Bath</label>
+        </div>
+        <div class="block">
+            <input type="checkbox" value="training" id="training" /><label class="ml-1" for="training"> Training Session</label>
+        </div>
+    </div>
+</form>
+
+@code {
+    ElementReference PetNameInputReference;
+    private Activity[]? activities;
+    private AddPetStatus addingPetStatus;
+    private Pet? petBeingAdded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.activities = await Http.GetFromJsonAsync<Activity[]>("Activity");
+    }
+
+    private void OnClickAddPet()
+    {
+        this.addingPetStatus = AddPetStatus.PetName;
+    }
+
+    private void OnClickCancelAddPet()
+    {
+        this.addingPetStatus = AddPetStatus.None;
+        this.PetNameInputReference.
+    }
+
+    enum AddPetStatus
+    {
+        None,
+        PetName,
+        PetDetails,
+    }
+}
