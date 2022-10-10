@@ -4,5 +4,10 @@
     {
         Dog,
         Cat,
+        Bird,
+        Tank,
+        Reptile,
+        SmallMammal,
+        Other,
     }
 }

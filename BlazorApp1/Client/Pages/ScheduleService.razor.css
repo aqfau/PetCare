@@ -27,6 +27,15 @@ select {
     min-width: 140px;
 }
 
+#app-add-new-pet {
+    border: solid thin black;
+    margin: 1em;
+    padding: 1em;
+}
+
+#app-add-new-pet h6 {
+    text-decoration: underline;
+}
 
 
 

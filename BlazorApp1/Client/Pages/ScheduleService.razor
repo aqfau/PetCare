@@ -1,30 +1,80 @@
 ﻿@page "/services/schedule"
 @using BlazorApp1.Shared.Models
+@using BlazorApp1.Shared.Enums
+@using System.Text.RegularExpressions
+@inject IJSRuntime JSRunTime
 @inject HttpClient Http
 <h3>Schedule Services</h3>
 <form class="app-group">
     <div class="app-form-group">
         <h5>Add Pets</h5>
-        <label for="preexistingSelector">Choose your Critter</label>
+        <label for="preexistingSelector">Choose your Pet</label>
         <select id="preexistingSelector"></select>
-        <div class="app-add-new-pet">
+        <div id="app-add-new-pet">
             @switch (addingPetStatus)
             {
                 case AddPetStatus.None:
                     <div><b>OR</b></div>
                     <button type="button" @onclick="OnClickAddPet">Add New Pet</button>
                     break;
-                case AddPetStatus.PetName:
-                    <label for="petName">What's your pet's name?: </label>
+                case AddPetStatus.Name:
+                    <h6>Add New Pet</h6>
+                    <label for="petName">What is your pet's name?: </label>
                     <input type="text" id="petName" @ref="PetNameInputReference">
-                    <button type="button">Cancel</button>
-                    <button type="button">Next</button>
+                    <div>
+                        <button type="button" @onclick="OnClickCancelAddPet">Cancel</button>
+                        <button type="button" @onclick="OnClickNext">Next</button>
+                    </div>
                     break;
-                case AddPetStatus.PetDetails:
+                case AddPetStatus.Details:
+                    <h6>Add New Pet</h6>
+                    <div for="petName"><span>Tell us about <b>@petBeingAdded?.Name</b></span></div>
+                    <div>
+                        <label for="petType">@petBeingAdded?.Name is a</label>
+                        <select @ref=PetTypeDropDown @onchange="SelectPetType">
+                            @foreach (string petType in Enum.GetNames(typeof(AnimalType)))
+                            {
+                                <option>@petType</option>
+                            }
+                        </select>
+                        @switch (petBeingAdded?.Type)
+                        {
+                            case AnimalType.Dog:
+                                <label for="dogBreedDropDown">What is <b>@petBeingAdded.Name's</b> breed?</label>
+                                <select id="dogBreedDropDown">
+                                </select>
+                                break;
+                            case AnimalType.Cat:
+                                <span>Fuck you and your cat</span>
+                                break;
+                        }
+                    </div>
+                    <div>
+                        <button type="button" @onclick="OnClickBack">Back</button>
+                        <button type="button" @onclick="OnClickNext">Next</button>
+                    </div>
+                    break;
+                case AddPetStatus.Summary:
+                    <h6>Add New Pet</h6>
                     <label for="petName">Pet Name: </label>
                     <input type="text" id="petName">
+                    <div>
+                        <button type="button" @onclick="OnClickBack">Back</button>
+                        <button type="button" @onclick="OnClickNext">Done</button>
+                    </div>
                     break;
             }
+        </div>
+        <div>
+            <ul>
+                @if (@petsInSchedule != null)
+                { 
+                    @foreach (Pet pet in petsInSchedule)
+                    {
+                        <li>@pet.Name (@pet.Type)</li>
+                    }
+                }
+            </ul>
         </div>
     </div>
     <h5>Select a Service:</h5>
@@ -60,30 +110,108 @@
 
 @code {
     ElementReference PetNameInputReference;
+    ElementReference PetTypeDropDown;
     private Activity[]? activities;
     private AddPetStatus addingPetStatus;
+    private IEnumerable<Pet> petsInSchedule;
     private Pet? petBeingAdded;
 
     protected override async Task OnInitializedAsync()
     {
         this.activities = await Http.GetFromJsonAsync<Activity[]>("Activity");
+        this.petsInSchedule = new List<Pet>();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
     }
 
     private void OnClickAddPet()
     {
-        this.addingPetStatus = AddPetStatus.PetName;
+        this.addingPetStatus = AddPetStatus.Name;
+        petBeingAdded = new Pet();
     }
 
-    private void OnClickCancelAddPet()
+    private async void OnClickNext()
+    {
+        switch (addingPetStatus)
+        {
+            case AddPetStatus.None:
+                petBeingAdded = new Pet();
+                break;
+            case AddPetStatus.Name:
+                if (petBeingAdded != null) 
+                {
+                    petBeingAdded.Name = await this.GetElementValue(PetNameInputReference);
+                    if (!string.IsNullOrWhiteSpace(petBeingAdded.Name))
+                    {
+                        this.addingPetStatus = AddPetStatus.Details;
+                    }
+                    else
+                    {
+
+                    }
+                }
+                break;
+            case AddPetStatus.Details:
+                this.addingPetStatus = AddPetStatus.Summary;
+                break;
+            case AddPetStatus.Summary:
+                this.addingPetStatus = AddPetStatus.None;
+                AddPet();
+                break;
+        }
+        StateHasChanged();
+    }
+
+    private void OnClickBack()
+    {
+        switch (addingPetStatus)
+        {
+            case AddPetStatus.Details:
+                this.addingPetStatus = AddPetStatus.Name;
+                break;
+            case AddPetStatus.Summary:
+                this.addingPetStatus = AddPetStatus.Details;
+                break;
+        }
+        this.addingPetStatus = AddPetStatus.Name;
+        petBeingAdded = new Pet();
+    }
+
+    private async void OnClickCancelAddPet()
     {
         this.addingPetStatus = AddPetStatus.None;
-        this.PetNameInputReference.
+        petBeingAdded = null;
+        await JSRunTime.InvokeVoidAsync("DomController.clearText", PetNameInputReference);
+    }
+
+    private async void SelectPetType()
+    {
+        if (this.petBeingAdded == null)
+        { 
+            return;
+        }
+        string enumValue = await JSRunTime.InvokeAsync<string>("DomController.getSelectedValue", PetTypeDropDown);
+        Console.WriteLine(enumValue);
+        // this.petBeingAdded.Type = enumValue;
+    }
+
+    private void AddPet()
+    { 
+
+    }
+
+    private async Task<string> GetElementValue(ElementReference element)
+    { 
+        return await JSRunTime.InvokeAsync<string>("DomController.getValue", element);
     }
 
     enum AddPetStatus
     {
         None,
-        PetName,
-        PetDetails,
+        Name,
+        Details,
+        Summary,
     }
 }
