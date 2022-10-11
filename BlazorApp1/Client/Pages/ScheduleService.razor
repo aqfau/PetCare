@@ -32,9 +32,9 @@
                     <div>
                         <label for="petType">@petBeingAdded?.Name is a</label>
                         <select @ref=PetTypeDropDown @onchange="SelectPetType">
-                            @foreach (string petType in Enum.GetNames(typeof(AnimalType)))
+                            @foreach (AnimalType petType in Enum.GetValues(typeof(AnimalType)))
                             {
-                                <option>@petType</option>
+                                <option value="@((int)petType)">@Enum.GetName(typeof(AnimalType), petType)</option>
                             }
                         </select>
                         @switch (petBeingAdded?.Type)
@@ -193,8 +193,7 @@
             return;
         }
         string enumValue = await JSRunTime.InvokeAsync<string>("DomController.getSelectedValue", PetTypeDropDown);
-        Console.WriteLine(enumValue);
-        // this.petBeingAdded.Type = enumValue;
+        this.petBeingAdded.Type = (AnimalType)Int32.Parse(enumValue);
     }
 
     private void AddPet()

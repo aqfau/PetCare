@@ -21,5 +21,6 @@ DomController.getValue = function (element) {
 }
 
 DomController.getSelectedValue = function (dropDownElement) {
-    console.log(dropDownElement.value);
+    console.log(dropDownElement.options[dropDownElement.selectedIndex].value)
+    return dropDownElement.options[dropDownElement.selectedIndex].value
 }

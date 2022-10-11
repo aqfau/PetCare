@@ -2,10 +2,10 @@
 {
     public enum AnimalType
     {
-        Dog,
+        Dog = 0,
         Cat,
         Bird,
-        Tank,
+        Fish,
         Reptile,
         SmallMammal,
         Other,
