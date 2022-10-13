@@ -23,5 +23,10 @@ namespace BlazorApp1.Shared.Models
         /// Gets or Sets the Breed of the pet if applicable
         /// </summary>
         public string? Breed { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the Weight of the pet
+        /// </summary>
+        public decimal? Weight { get; set; }
     }
 }

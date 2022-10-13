@@ -1,4 +1,6 @@
 ﻿@page "/services/schedule"
+@using BlazorApp1.Client.Components
+@using BlazorApp1.Client.Models
 @using BlazorApp1.Shared.Models
 @using BlazorApp1.Shared.Enums
 @using System.Text.RegularExpressions
@@ -29,25 +31,82 @@
                 case AddPetStatus.Details:
                     <h6>Add New Pet</h6>
                     <div for="petName"><span>Tell us about <b>@petBeingAdded?.Name</b></span></div>
-                    <div>
-                        <label for="petType">@petBeingAdded?.Name is a</label>
-                        <select @ref=PetTypeDropDown @onchange="SelectPetType">
-                            @foreach (AnimalType petType in Enum.GetValues(typeof(AnimalType)))
-                            {
-                                <option value="@((int)petType)">@Enum.GetName(typeof(AnimalType), petType)</option>
-                            }
-                        </select>
-                        @switch (petBeingAdded?.Type)
-                        {
-                            case AnimalType.Dog:
-                                <label for="dogBreedDropDown">What is <b>@petBeingAdded.Name's</b> breed?</label>
-                                <select id="dogBreedDropDown">
-                                </select>
-                                break;
-                            case AnimalType.Cat:
-                                <span>Fuck you and your cat</span>
-                                break;
-                        }
+                    <DropDownInput SelectedValue="SelectAnimalType" DefaultToBlank="true" IsPascalCase="true" Names="Enum.GetNames(typeof(AnimalType))" LabelText="@returnString($"{petBeingAdded?.Name} is a")"></DropDownInput>
+                    @switch (petBeingAdded?.Type)
+                    {
+                        case AnimalType.Dog:
+                            <DropDownInput DefaultToBlank="true" IsPascalCase="true" Names="Enum.GetNames(typeof(Sex))"></DropDownInput>
+                            <DropDownInput DefaultToBlank="true" IsPascalCase="true" Names="Enum.GetNames(typeof(DogBreeds))"></DropDownInput>
+                            <div>
+                                <YesNoInput labelText="@GetIsMixedBreedString()" optionSelected="@SetIsMixedBreed"></YesNoInput>
+                            </div>
+                            <div>
+                                <label for=""></label>
+                            </div>
+                            <div>
+                                <label for="petWeight">@petBeingAdded.Name weighs</label>
+                                <input id="petWeight" type="number"><short> lbs</short>
+                            </div>
+                            break;
+                        case AnimalType.Cat:
+                            <span>Fuck you and your cat</span>
+                            break;
+                    }
+                    <div style="display: inline-flex">
+                        <div class="inline-block">
+                            <label>@petBeingAdded?.Name's likes:</label>
+                            <ul style="list-style: none; padding: 0em; margin-right: 10em">
+                                <li>
+                                    <input type="checkbox" value="cats" />
+                                    <label>Cats</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="dogs" />
+                                    <label>Dogs</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="cuddles" />
+                                    <label>Cuddles</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="fetch" />
+                                    <label>Fetch</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="fetch" />
+                                    <label>Tug o' war</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="other" />
+                                    <label>Other</label>
+                                    <input type="text" value="" placeholder="Enter other here..." />
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="inline-block">
+                            <label>
+                                @petBeingAdded?.Name's dislikes:
+                            </label>
+                            <ul style="list-style: none; padding: 0em; margin-right: 10em">
+                                <li>
+                                    <input type="checkbox" value="cats" />
+                                    <label>Cats</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="dogs" />
+                                    <label>Dogs</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="cuddles" />
+                                    <label>Cuddles</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" value="other" />
+                                    <label>Other</label>
+                                    <input type="text" value="" placeholder="Enter other here..." />
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div>
                         <button type="button" @onclick="OnClickBack">Back</button>
@@ -68,7 +127,7 @@
         <div>
             <ul>
                 @if (@petsInSchedule != null)
-                { 
+                {
                     @foreach (Pet pet in petsInSchedule)
                     {
                         <li>@pet.Name (@pet.Type)</li>
@@ -115,6 +174,7 @@
     private AddPetStatus addingPetStatus;
     private IEnumerable<Pet> petsInSchedule;
     private Pet? petBeingAdded;
+    private bool IsMixBreed = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -126,10 +186,27 @@
     {
     }
 
+    private void SelectAnimalType(int typeInt)
+    {
+        AnimalType animalType = (AnimalType)typeInt;
+        this.petBeingAdded.Type = animalType;
+    }
+
     private void OnClickAddPet()
     {
         this.addingPetStatus = AddPetStatus.Name;
         petBeingAdded = new Pet();
+    }
+
+    private string GetIsMixedBreedString()
+    {
+        return $"Is {petBeingAdded?.Name} mixed?";
+    }
+
+    private void SetIsMixedBreed(bool isMixed)
+    {
+        IsMixBreed = isMixed;
+        Console.WriteLine(isMixed);
     }
 
     private async void OnClickNext()
@@ -140,7 +217,7 @@
                 petBeingAdded = new Pet();
                 break;
             case AddPetStatus.Name:
-                if (petBeingAdded != null) 
+                if (petBeingAdded != null)
                 {
                     petBeingAdded.Name = await this.GetElementValue(PetNameInputReference);
                     if (!string.IsNullOrWhiteSpace(petBeingAdded.Name))
@@ -186,24 +263,19 @@
         await JSRunTime.InvokeVoidAsync("DomController.clearText", PetNameInputReference);
     }
 
-    private async void SelectPetType()
-    {
-        if (this.petBeingAdded == null)
-        { 
-            return;
-        }
-        string enumValue = await JSRunTime.InvokeAsync<string>("DomController.getSelectedValue", PetTypeDropDown);
-        this.petBeingAdded.Type = (AnimalType)Int32.Parse(enumValue);
-    }
-
     private void AddPet()
-    { 
+    {
 
     }
 
     private async Task<string> GetElementValue(ElementReference element)
-    { 
+    {
         return await JSRunTime.InvokeAsync<string>("DomController.getValue", element);
+    }
+
+    private string returnString(string str)
+    {
+        return str;
     }
 
     enum AddPetStatus
